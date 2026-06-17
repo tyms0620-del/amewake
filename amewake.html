@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>あめわけ — 飴を分けるアプリ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#3a2e39;
+    --ink-soft:#8a7c87;
+    --pink:#ff4d6d;
+    --pink-soft:#ffd9e2;
+    --mint:#2ec4b6;
+    --paper:#ffffff;
+    --line:#f0e3df;
+    --shadow:0 6px 20px rgba(120,70,90,.10);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'M PLUS Rounded 1c','Hiragino Maru Gothic ProN',system-ui,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(170deg,#fff4ec 0%,#ffe9f0 100%);
+    min-height:100vh;padding-bottom:48px;
+  }
+
+  /* ── 看板（テント） ── */
+  header{
+    background:repeating-linear-gradient(135deg,var(--pink) 0 22px,#ff7a92 22px 44px);
+    padding:18px 16px 30px;border-radius:0 0 26px 26px;
+    box-shadow:0 8px 24px rgba(255,77,109,.25);position:relative;text-align:center;
+  }
+  header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:18px;
+    background:radial-gradient(circle at 16px -2px,transparent 14px,#ffe9f0 15px) repeat-x;background-size:32px 18px;}
+  .plate{display:inline-block;background:var(--paper);padding:8px 24px;border-radius:999px;box-shadow:var(--shadow);}
+  h1{margin:0;font-size:30px;font-weight:800;letter-spacing:1px;}
+  h1 .em{color:var(--pink);}
+  .tagline{margin:8px 0 0;color:#fff;font-size:13px;font-weight:500;}
+
+  .wrap{max-width:760px;margin:0 auto;padding:0 14px;}
+
+  /* ── 凡例（タップで追加） ── */
+  .legend{background:var(--paper);border-radius:20px;padding:13px 14px;box-shadow:var(--shadow);margin:18px 0 14px;}
+  .legend-title{display:block;font-weight:800;font-size:14px;margin-bottom:10px;}
+  .legend-title small{font-weight:500;color:var(--ink-soft);margin-left:6px;}
+  .chips{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  @media(min-width:520px){.chips{grid-template-columns:repeat(4,1fr);}}
+  .chip{display:flex;align-items:center;gap:9px;background:#fbf6f8;border:2px solid var(--line);
+    border-radius:14px;padding:8px 11px;font-family:inherit;transition:transform .08s ease;width:100%;}
+  .chip:active{transform:scale(.95);background:#fff;}
+  .chip .swatch{width:42px;height:27px;flex-shrink:0;}
+  .chip .swatch svg{width:100%;height:100%;display:block;}
+  .chip .v{font-weight:800;font-size:16px;}
+  .chip .plus{margin-left:auto;color:var(--ink-soft);font-weight:800;font-size:18px;}
+
+  /* ── ツールバー ── */
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px;}
+  button{font-family:inherit;cursor:pointer;border:none;}
+  .btn{font-size:15px;font-weight:700;padding:11px 16px;border-radius:14px;background:var(--paper);
+    color:var(--ink);box-shadow:var(--shadow);transition:transform .08s ease;}
+  .btn:active{transform:scale(.95);}
+  .btn.person{background:var(--mint);color:#fff;}
+  .btn.ghost-btn{background:rgba(255,255,255,.6);color:var(--ink-soft);font-size:14px;padding:11px 14px;}
+  .btn.share{background:var(--pink);color:#fff;}
+
+  .stat{text-align:center;color:var(--ink-soft);font-size:13px;font-weight:500;margin-bottom:14px;}
+  .stat b{color:var(--ink);font-weight:800;}
+
+  /* ── 飴びん（プール） ── */
+  .pool{background:var(--paper);border-radius:22px;padding:14px;margin-bottom:18px;
+    box-shadow:var(--shadow);border:3px dashed var(--pink-soft);}
+  .pool-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+  .pool-head .label{font-weight:800;font-size:16px;}
+  .pool-head .count{margin-left:auto;background:var(--pink-soft);color:var(--pink);
+    font-weight:800;font-size:14px;padding:3px 12px;border-radius:999px;}
+
+  /* ── 人カード ── */
+  .people{display:grid;grid-template-columns:1fr;gap:14px;}
+  @media(min-width:520px){.people{grid-template-columns:1fr 1fr;}}
+  .person{background:var(--paper);border-radius:20px;padding:13px;box-shadow:var(--shadow);border:3px solid transparent;}
+  .person-top{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .name{flex:1;min-width:0;font-family:inherit;font-size:17px;font-weight:700;color:var(--ink);
+    border:none;border-bottom:2px dotted var(--line);background:transparent;padding:4px 2px;}
+  .name:focus{outline:none;border-bottom-color:var(--mint);}
+  .name::placeholder{color:#cfc3cb;}
+  .count{background:var(--mint);color:#fff;font-weight:800;font-size:14px;padding:3px 12px;border-radius:999px;white-space:nowrap;}
+  .del{background:#f6eef1;color:#b9a7b1;width:28px;height:28px;border-radius:50%;font-size:17px;line-height:1;font-weight:700;flex-shrink:0;}
+  .del:active{background:#ffd9e2;color:var(--pink);}
+
+  /* ── 飴トレイ（ドロップ先） ── */
+  .tray{display:flex;flex-wrap:wrap;gap:6px;align-items:center;align-content:flex-start;
+    min-height:62px;border-radius:14px;background:#fbf6f8;padding:8px;transition:background .12s ease;}
+  .pool .tray{min-height:76px;}
+  .tray .hint{color:#cfc3cb;font-size:13px;font-weight:500;margin:auto;}
+  .zone.over{border-color:var(--mint)!important;background:#eafbf8;}
+  .zone.over .tray{background:#eafbf8;}
+
+  /* ── 飴 ── */
+  .candy{touch-action:none;cursor:grab;display:flex;align-items:center;justify-content:center;transition:transform .12s ease;}
+  .candy svg{width:100%;height:100%;display:block;filter:drop-shadow(0 2px 2px rgba(0,0,0,.12));}
+  .candy.lifting{opacity:.28;}
+  .candy.pop{animation:pop .28s ease;}
+  @keyframes pop{0%{transform:scale(.4);}60%{transform:scale(1.18);}100%{transform:scale(1);}}
+  .ghost{position:fixed;z-index:999;pointer-events:none;transform:scale(1.3) rotate(-7deg);
+    filter:drop-shadow(0 8px 10px rgba(0,0,0,.25));}
+
+  /* ── ゴミ箱 ── */
+  .trash{margin:18px auto 0;max-width:240px;text-align:center;background:rgba(255,255,255,.55);
+    border:3px dashed #e3d3d9;border-radius:16px;padding:14px;color:var(--ink-soft);font-weight:700;font-size:14px;}
+  .trash.over{background:#ffe6e6;border-color:var(--pink);color:var(--pink);}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;}}
+</style>
+</head>
+<body>
+  <header>
+    <span class="plate"><h1>あめ<span class="em">わけ</span></h1></span>
+    <p class="tagline">飴をつまんで、みんなに分けよう</p>
+  </header>
+
+  <div class="wrap">
+    <div class="legend">
+      <span class="legend-title">凡例（飴の種類）<small>タップでその飴をふやす</small></span>
+      <div class="chips" id="legend"></div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn person" onclick="addPerson()">＋ 人をふやす</button>
+      <button class="btn ghost-btn" onclick="distribute()">数で均等に分ける</button>
+      <button class="btn ghost-btn" onclick="returnAll()">ぜんぶもどす</button>
+      <button class="btn share" onclick="shareImage()">📷 画像で共有</button>
+    </div>
+
+    <p class="stat">合計 <b id="totalValue">0</b>　・　飴 <b id="totalCandy">0</b>こ　・　なかま <b id="totalPeople">0</b>にん</p>
+
+    <div class="pool zone" data-owner="pool">
+      <div class="pool-head">
+        <span class="label">🫙 飴びん（みんなのぶん）</span>
+        <span class="count" id="poolCount">0</span>
+      </div>
+      <div class="tray" data-tray="pool"></div>
+    </div>
+
+    <div class="people" id="people"></div>
+
+    <div class="trash zone" data-owner="trash">🗑 ここに落とすと飴を消せます</div>
+  </div>
+
+<script>
+  // 4種類の飴：値・色
+  const DENOMS = [
+    {v:1,    color:'#3FC96B'},  // 緑
+    {v:10,   color:'#2BB7F0'},  // 青
+    {v:100,  color:'#9B5DE5'},  // 紫
+    {v:1000, color:'#FF4D6D'},  // ピンク
+  ];
+  let people = [];
+  let candies = [];   // {id, value, owner}  owner='pool'|personId
+  let uid = 1;
+  let justAdded = null;
+
+  function sizeFor(v){ return v>=1000?64 : v>=100?54 : v>=10?46 : 40; }
+  function fontFor(v){ const d=String(v).length; return d>=4?12 : d===3?14 : 17; }
+
+  // ねじり飴のSVG（数字つき）
+  function candySVG(color,value){
+    const fs = fontFor(value);
+    return `<svg viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">
+      <path d="M2 20 L18 9 L18 31 Z" fill="${color}" opacity=".75"/>
+      <path d="M62 20 L46 9 L46 31 Z" fill="${color}" opacity=".75"/>
+      <ellipse cx="32" cy="20" rx="17" ry="14" fill="${color}"/>
+      <ellipse cx="26" cy="13" rx="4.5" ry="2.6" fill="#fff" opacity=".5"/>
+      <text x="32" y="21" text-anchor="middle" dominant-baseline="central"
+        font-family="'M PLUS Rounded 1c',sans-serif" font-size="${fs}" font-weight="800"
+        fill="#fff" stroke="rgba(0,0,0,.18)" stroke-width="0.5" paint-order="stroke">${value}</text>
+    </svg>`;
+  }
+
+  function candyEl(c){
+    const w = sizeFor(c.value), h = Math.round(w*0.63);
+    return `<div class="candy ${justAdded===c.id?'pop':''}" data-id="${c.id}"
+      style="width:${w}px;height:${h}px">${candySVG(DENOMS.find(d=>d.v===c.value).color,c.value)}</div>`;
+  }
+
+  function addCandy(value){
+    const id='c'+uid++;
+    candies.push({id,value,owner:'pool'});
+    justAdded=id; render();
+  }
+  function addPerson(){
+    const id='p'+uid++;
+    people.push({id,name:''}); justAdded=id; render();
+    const el=document.querySelector(`[data-name="${id}"]`); if(el) el.focus();
+  }
+  function delPerson(id){
+    candies.forEach(c=>{ if(c.owner===id) c.owner='pool'; });
+    people=people.filter(p=>p.id!==id); render();
+  }
+  function returnAll(){ candies.forEach(c=>c.owner='pool'); render(); }
+  function distribute(){
+    if(people.length===0){ alert('先に「人をふやす」で分ける相手を追加してね'); return; }
+    const per=Math.floor(candies.length/people.length); let i=0;
+    people.forEach(p=>{ for(let k=0;k<per;k++){ candies[i++].owner=p.id; } });
+    while(i<candies.length){ candies[i++].owner='pool'; }
+    render();
+  }
+
+  const sumValue = owner => candies.filter(c=>c.owner===owner).reduce((s,c)=>s+c.value,0);
+  const countOf  = owner => candies.filter(c=>c.owner===owner).length;
+  const fmt = n => n.toLocaleString('ja-JP');
+
+  function renderLegend(){
+    document.getElementById('legend').innerHTML = DENOMS.map(d=>`
+      <button class="chip" onclick="addCandy(${d.v})">
+        <span class="swatch">${candySVG(d.color,d.v)}</span>
+        <span class="v">${fmt(d.v)}</span>
+        <span class="plus">＋</span>
+      </button>`).join('');
+  }
+
+  function render(){
+    // 飴びん
+    const poolC = candies.filter(c=>c.owner==='pool');
+    const poolTray = document.querySelector('[data-tray="pool"]');
+    poolTray.innerHTML = poolC.length ? poolC.map(candyEl).join('')
+      : '<span class="hint">ここに余りの飴が入ります</span>';
+    document.getElementById('poolCount').textContent = fmt(sumValue('pool'));
+
+    // 人カード
+    document.getElementById('people').innerHTML = people.map(p=>{
+      const mine = candies.filter(c=>c.owner===p.id);
+      const tray = mine.length ? mine.map(candyEl).join('') : '<span class="hint">ここに飴をドラッグ</span>';
+      return `<div class="person zone" data-owner="${p.id}">
+        <div class="person-top">
+          <input class="name" data-name="${p.id}" value="${escapeHtml(p.name)}" placeholder="なまえ" maxlength="12">
+          <span class="count">${fmt(sumValue(p.id))}</span>
+          <button class="del" onclick="delPerson('${p.id}')" aria-label="この人を消す">×</button>
+        </div>
+        <div class="tray" data-tray="${p.id}">${tray}</div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('totalValue').textContent = fmt(candies.reduce((s,c)=>s+c.value,0));
+    document.getElementById('totalCandy').textContent = candies.length;
+    document.getElementById('totalPeople').textContent = people.length;
+    justAdded=null;
+  }
+
+  function escapeHtml(s){return s.replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
+
+  document.addEventListener('input', e=>{
+    if(e.target.classList.contains('name')){
+      const p=people.find(x=>x.id===e.target.dataset.name); if(p) p.name=e.target.value;
+    }
+  });
+
+  // ── ドラッグ（マウス＆タッチ共通） ──
+  let drag=null;
+  function zoneAt(x,y){
+    for(const el of document.elementsFromPoint(x,y)){
+      const z=el.closest && el.closest('.zone'); if(z) return z;
+    } return null;
+  }
+  const clearOver=()=>document.querySelectorAll('.zone.over').forEach(z=>z.classList.remove('over'));
+
+  document.addEventListener('pointerdown', e=>{
+    const el=e.target.closest('.candy'); if(!el) return;
+    e.preventDefault();
+    const r=el.getBoundingClientRect();
+    const g=el.cloneNode(true); g.className='candy ghost';
+    g.style.width=r.width+'px'; g.style.height=r.height+'px'; g.style.left=r.left+'px'; g.style.top=r.top+'px';
+    document.body.appendChild(g); el.classList.add('lifting');
+    drag={id:el.dataset.id,ghost:g,ox:e.clientX-r.left,oy:e.clientY-r.top};
+  });
+  document.addEventListener('pointermove', e=>{
+    if(!drag) return;
+    drag.ghost.style.left=(e.clientX-drag.ox)+'px'; drag.ghost.style.top=(e.clientY-drag.oy)+'px';
+    clearOver(); const z=zoneAt(e.clientX,e.clientY); if(z) z.classList.add('over');
+  });
+  document.addEventListener('pointerup', e=>{
+    if(!drag) return;
+    const z=zoneAt(e.clientX,e.clientY); drag.ghost.remove(); clearOver();
+    if(z){
+      if(z.dataset.owner==='trash'){ candies=candies.filter(c=>c.id!==drag.id); }
+      else{ const c=candies.find(x=>x.id===drag.id); if(c){ justAdded=c.id; c.owner=z.dataset.owner; } }
+    }
+    drag=null; render();
+  });
+  document.addEventListener('pointercancel', ()=>{ if(!drag) return; drag.ghost.remove(); clearOver(); drag=null; render(); });
+
+  // ── 結果を1枚の画像にする ──
+  function roundRect(ctx,x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  }
+  function drawMiniCandy(ctx,x,y,w,value,color){
+    const h=w*0.62;
+    ctx.save(); ctx.translate(x,y);
+    ctx.fillStyle=color; ctx.globalAlpha=.75;
+    ctx.beginPath(); ctx.moveTo(0,h/2); ctx.lineTo(w*0.26,h*0.18); ctx.lineTo(w*0.26,h*0.82); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(w,h/2); ctx.lineTo(w*0.74,h*0.18); ctx.lineTo(w*0.74,h*0.82); ctx.closePath(); ctx.fill();
+    ctx.globalAlpha=1;
+    ctx.beginPath(); ctx.ellipse(w/2,h/2,w*0.27,h*0.37,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font=`800 ${Math.round(h*0.42)}px 'M PLUS Rounded 1c',sans-serif`;
+    ctx.fillText(value, w/2, h/2+1);
+    ctx.restore();
+    return w;
+  }
+  // ある相手の飴を「種類ごと」にまとめる
+  function breakdown(owner){
+    const map={};
+    candies.filter(c=>c.owner===owner).forEach(c=>map[c.value]=(map[c.value]||0)+1);
+    return DENOMS.filter(d=>map[d.v]).map(d=>({v:d.v,color:d.color,n:map[d.v]}));
+  }
+  function drawRow(ctx,x,y,w,label,owner,accent){
+    const rowH=96, pad=18;
+    ctx.fillStyle='#ffffff'; roundRect(ctx,x,y,w,rowH,16); ctx.fill();
+    ctx.fillStyle=accent; roundRect(ctx,x,y,8,rowH,4); ctx.fill();
+    // 名前
+    ctx.fillStyle='#3a2e39'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    ctx.font="700 24px 'M PLUS Rounded 1c',sans-serif";
+    ctx.fillText(label||'(なまえ)', x+pad+10, y+34);
+    // 合計
+    ctx.textAlign='right'; ctx.font="800 30px 'M PLUS Rounded 1c',sans-serif"; ctx.fillStyle=accent;
+    ctx.fillText(fmt(sumValue(owner)), x+w-pad, y+38);
+    // 内訳
+    let cx=x+pad+10; const cy=y+54;
+    const bd=breakdown(owner);
+    if(bd.length===0){
+      ctx.fillStyle='#cfc3cb'; ctx.textAlign='left'; ctx.font="500 17px 'M PLUS Rounded 1c',sans-serif";
+      ctx.fillText('なし', cx, cy+22);
+    }else{
+      bd.forEach(b=>{
+        const cw=drawMiniCandy(ctx,cx,cy,34,b.v,b.color);
+        ctx.fillStyle='#8a7c87'; ctx.textAlign='left'; ctx.textBaseline='middle';
+        ctx.font="700 17px 'M PLUS Rounded 1c',sans-serif";
+        ctx.fillText('×'+b.n, cx+cw+3, cy+cw*0.31+1);
+        cx += cw + 3 + ctx.measureText('×'+b.n).width + 18;
+      });
+    }
+  }
+  function buildShareCanvas(){
+    const W=720, pad=24, headerH=128, rowH=96, gap=12, footerH=58;
+    const hasPool = countOf('pool')>0;
+    const rows = people.length + (hasPool?1:0);
+    const H = headerH + rows*(rowH+gap) + footerH + pad;
+    const dpr=2;
+    const cv=document.createElement('canvas');
+    cv.width=W*dpr; cv.height=H*dpr;
+    const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
+    // 背景
+    const bg=ctx.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#fff4ec'); bg.addColorStop(1,'#ffe9f0');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    // ヘッダー（テント風ストライプ）
+    ctx.save(); roundRect(ctx,0,0,W,headerH,0); ctx.clip();
+    for(let i=-1;i*22<W+headerH;i++){
+      ctx.fillStyle=(i%2===0)?'#ff4d6d':'#ff7a92';
+      ctx.beginPath(); ctx.moveTo(i*22,0); ctx.lineTo(i*22+22,0); ctx.lineTo(i*22+22-headerH,headerH); ctx.lineTo(i*22-headerH,headerH); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+    ctx.fillStyle='#fff'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    ctx.font="800 38px 'M PLUS Rounded 1c',sans-serif";
+    ctx.fillText('🍬 あめわけ けっか', pad+6, 56);
+    const d=new Date();
+    const ds=`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    ctx.font="500 18px 'M PLUS Rounded 1c',sans-serif"; ctx.fillText(ds, pad+6, 86);
+    const total=candies.reduce((s,c)=>s+c.value,0);
+    ctx.textAlign='right'; ctx.font="800 30px 'M PLUS Rounded 1c',sans-serif";
+    ctx.fillText('合計 '+fmt(total), W-pad-6, 70);
+    ctx.font="500 16px 'M PLUS Rounded 1c',sans-serif"; ctx.fillText(candies.length+'こ ・ '+people.length+'にん', W-pad-6, 94);
+    // 各メンバー
+    let y=headerH+pad;
+    const rw=W-pad*2;
+    people.forEach(p=>{ drawRow(ctx,pad,y,rw,p.name,p.id,'#2ec4b6'); y+=rowH+gap; });
+    if(hasPool){ drawRow(ctx,pad,y,rw,'🫙 飴びん（あまり）','pool','#ff4d6d'); y+=rowH+gap; }
+    // フッター
+    ctx.fillStyle='#b9a7b1'; ctx.textAlign='center'; ctx.font="500 16px 'M PLUS Rounded 1c',sans-serif";
+    ctx.fillText('あめわけアプリ で作成', W/2, H-22);
+    return cv;
+  }
+  async function shareImage(){
+    try{ if(document.fonts && document.fonts.ready) await document.fonts.ready; }catch(e){}
+    const cv=buildShareCanvas();
+    cv.toBlob(async blob=>{
+      if(!blob){ alert('画像を作れませんでした'); return; }
+      const file=new File([blob],'amewake.png',{type:'image/png'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        try{ await navigator.share({files:[file],title:'あめわけ けっか',text:'飴わけの結果'}); }
+        catch(e){ /* キャンセル時は何もしない */ }
+      }else{
+        const url=URL.createObjectURL(blob);
+        const a=document.createElement('a'); a.href=url; a.download='amewake.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+        alert('この環境では共有メニューが使えないため、画像を保存しました。\n保存した画像をLINEやメッセージで送ってください。');
+      }
+    },'image/png');
+  }
+
+  // ── 初期データ ──
+  renderLegend();
+  addPerson(); people[0].name='たろう';
+  addPerson(); people[1].name='はなこ';
+  [1,1,10,10,100,1000].forEach(addCandy);
+  render();
+</script>
+</body>
+</html>
